@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pneumonia Result</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="text-center mb-5 animate__animated animate__fadeIn">
+                    <h1 class="display-4">
+                        <i class="fas fa-file-medical-alt text-primary me-2"></i> Analysis Result
+                    </h1>
+                    <a href="/" class="btn btn-outline-secondary mt-3">
+                        <i class="fas fa-arrow-left me-2"></i> Check Another X-ray
+                    </a>
+                </div>
+
+                <!-- Result Card -->
+                <div class="card shadow-lg mb-5 animate__animated animate__zoomIn">
+                    <div class="card-body p-0">
+                        <div class="row g-0">
+                            <!-- X-ray Image -->
+                            <div class="col-md-6 p-4 d-flex align-items-center justify-content-center bg-dark">
+                                <img src="{{ url_for('serve_uploaded_file', filename=filename) }}" 
+                                     alt="X-ray Result" 
+                                     class="img-fluid rounded shadow">
+                            </div>
+                            <!-- Result Details -->
+                            <div class="col-md-6 p-4 bg-white">
+                                {% if result == "Pneumonia Detected" %}
+                                    <div class="alert alert-danger animate__animated animate__headShake">
+                                        <h2 class="alert-heading">
+                                            <i class="fas fa-exclamation-triangle me-2"></i> {{ result }}
+                                        </h2>
+                                        <p class="mb-0">Confidence: <strong>{{ confidence }}%</strong></p>
+                                    </div>
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-stethoscope me-2"></i>
+                                        <strong>Recommendation:</strong> Consult a doctor immediately.
+                                    </div>
+                                {% else %}
+                                    <div class="alert alert-success animate__animated animate__pulse">
+                                        <h2 class="alert-heading">
+                                            <i class="fas fa-check-circle me-2"></i> {{ result }}
+                                        </h2>
+                                        <p class="mb-0">Confidence: <strong>{{ confidence }}%</strong></p>
+                                    </div>
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-stethoscope me-2"></i>
+                                        <strong>Recommendation:</strong> No immediate concerns detected.
+                                    </div>
+                                {% endif %}
+
+                                <!-- Confidence Meter -->
+                                <div class="mt-4">
+                                    <h5 class="mb-3">
+                                        <i class="fas fa-chart-line me-2 text-primary"></i> Confidence Level
+                                    </h5>
+                                    <div class="progress" style="height: 30px;">
+                                        <div class="progress-bar {% if result == 'Pneumonia Detected' %}bg-danger{% else %}bg-success{% endif %} 
+                                            progress-bar-striped progress-bar-animated" 
+                                            role="progressbar" 
+                                            style="width: {{ confidence }}%">
+                                            {{ confidence }}%
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Voice Announcement Button -->
+                                <div class="mt-4">
+                                    <button id="speakResult" class="btn btn-outline-primary w-100">
+                                        <i class="fas fa-volume-up me-2"></i> Announce Result
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Model Performance -->
+                <div class="card border-0 shadow-sm animate__animated animate__fadeIn animate__delay-1s">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-chart-pie me-2 text-info"></i> Model Performance
+                        </h5>
+                        <div class="row mt-3">
+                            <div class="col-md-6 mb-3">
+                                <div class="p-3 bg-light rounded">
+                                    <h6>Accuracy</h6>
+                                    <h2 class="text-success">{{ model_accuracy }}%</h2>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="p-3 bg-light rounded">
+                                    <h6>Trained Images</h6>
+                                    <h2 class="text-primary">{{ trained_images }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/voice.js') }}"></script>
+    <script>
+        // Voice announcement on result page
+        document.getElementById('speakResult').addEventListener('click', function() {
+            const result = "{{ result }}";
+            const confidence = "{{ confidence }}";
+            const message = `The X-ray scan shows: ${result} with ${confidence} percent confidence.`;
+            speak(message);
+        });
+
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.9;
+                speechSynthesis.speak(utterance);
+            } else {
+                alert("Your browser doesn't support speech synthesis.");
+            }
+        }
+    </script>
+</body>
+</html>

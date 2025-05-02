@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card text-center">
+  <div class="card-body">
+    <i class="fas fa-exclamation-circle fa-5x text-danger mb-4"></i>
+    <h2 class="card-title">Error Occurred</h2>
+    <p class="card-text">{{ message }}</p>
+    <a href="/" class="btn btn-primary mt-3">
+      <i class="fas fa-arrow-left"></i> Go Back
+    </a>
+  </div>
+</div>
+{% endblock %}

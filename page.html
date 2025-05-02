@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pneumonia Detection</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            background-color: #fff;
+        }
+        .upload-area:hover {
+            background-color: #e9ecef;
+        }
+        #file-input {
+            display: none;
+        }
+        #upload-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+            color: #6c757d;
+        }
+        .spinner-container {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .result-container {
+            display: none;
+            margin-top: 30px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .animated-fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">Pneumonia Detection</h1>
+
+        <div class="upload-area" id="upload-area">
+            <i class="fas fa-upload" id="upload-icon"></i>
+            <p>Drag and drop your X-ray image here or <label for="file-input" class="btn btn-link">browse</label></p>
+            <input type="file" id="file-input" accept="image/*">
+        </div>
+
+        <div class="spinner-container" id="spinner">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <p class="mt-2">Analyzing image...</p>
+        </div>
+
+        <div class="result-container animated-fade-in" id="result">
+            <h2>Prediction Result</h2>
+            <p id="prediction-text"></p>
+            <p>Probability: <span id="probability-text"></span></p>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <script src="https://kit.fontawesome.com/your_fontawesome_kit.js" crossorigin="anonymous"></script>
+    <script>
+        $(document).ready(function() {
+            let uploadedFilename = null;
+
+            $('#upload-area').on('click', function() {
+                $('#file-input').click();
+            });
+
+            $('#file-input').on('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    uploadFile(file);
+                }
+            });
+
+            $('#upload-area').on('dragover', function(e) {
+                e.preventDefault();
+                $(this).addClass('bg-light');
+            });
+
+            $('#upload-area').on('dragleave', function() {
+                $(this).removeClass('bg-light');
+            });
+
+            $('#upload-area').on('drop', function(e) {
+                e.preventDefault();
+                $(this).removeClass('bg-light');
+                const file = e.originalEvent.dataTransfer.files[0];
+                if (file) {
+                    uploadFile(file);
+                }
+            });
+
+            function uploadFile(file) {
+                let formData = new FormData();
+                formData.append('file', file);
+
+                $.ajax({
+                    url: '/upload',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function(response) {
+                        uploadedFilename = response.filename;
+                        $('#spinner').show();
+                        $('#result').hide();
+                        setTimeout(predictImage, 500); // Small delay before prediction
+                    },
+                    error: function(error) {
+                        alert('Error uploading file.');
+                        console.error(error);
+                    }
+                });
+            }
+
+            function predictImage() {
+                if (uploadedFilename) {
+                    $.ajax({
+                        url: '/predict',
+                        type: 'POST',
+                        data: { filename: uploadedFilename },
+                        success: function(response) {
+                            $('#spinner').hide();
+                            $('#prediction-text').text(response.prediction);
+                            $('#probability-text').text(response.probability);
+                            $('#result').fadeIn();
+                        },
+                        error: function(error) {
+                            $('#spinner').hide();
+                            alert('Error during prediction.');
+                            console.error(error);
+                        }
+                    });
+                } else {
+                    alert('No file uploaded.');
+                    $('#spinner').hide();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
